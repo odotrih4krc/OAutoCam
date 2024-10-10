@@ -1,0 +1,30 @@
+import machine
+import time
+import sdcard
+import os
+import camera
+import network
+
+spi = machine.SPI(1, baudrate=1000000, sck=machine.Pin(13), mosi=machine.Pin(15), miso=machine.Pin(14))
+sd = sdcard.SDCard(spi, machine.Pin(12))
+os.mount(sd, "/sd")
+
+cam = camera.Camera()
+cam.init()
+
+def save_image(image, filename):
+    with open("/sd/" + filename, "wb") as f:
+        f.write(image)
+
+def detect_face():
+    return cam.detect_face()
+
+while True:
+    if detect_face():
+        img = cam.capture()
+        timestamp = time.localtime()
+        filename = "image_{:02d}{:02d}{:02d}_{:02d}{:02d}{:02d}.jpg".format(timestamp[0], timestamp[1], timestamp[2], timestamp[3], timestamp[4], timestamp[5])
+        save_image(img, filename)
+        print("Image saved as:", filename)
+
+    time.sleep(1)
